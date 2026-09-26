@@ -1,0 +1,24 @@
+# Vercel n'a besoin que du dashboard. Le service d'inference, le modele et les
+# documents de travail alourdissent l'envoi sans servir au build.
+#
+# A ne pas confondre avec .gitignore : .gitignore decide ce qui entre dans le
+# depot, .vercelignore ce qui est televerse a Vercel. Les deux sont necessaires
+# ici, parce que le depot doit contenir l'inference (Render la clone) alors que
+# Vercel n'en veut pas.
+
+inference/
+models/
+
+# Deja ignore par git, rappele pour la clarte si tu deplies sans git
+node_modules/
+dist/
+
+# Documents de travail et figures du notebook
+*.png
+*.ipynb
+*.docx
+code.html
+aa.cjs
+DEPLOIEMENT.md
+supabase_schema.sql
+supabase_migration_v2.sql

@@ -1,0 +1,24 @@
+# Ce fichier est ce qui rend le depot deployable. Sans lui, `git add .`
+# embarque les 195 Mo de inference/.venv et les 49 Mo de node_modules : Vercel
+# refuse l'envoi, et Render mettrait plusieurs minutes a cloner.
+
+# Dependances
+node_modules/
+
+# Sortie de build (regeneree par `npm run build`)
+dist/
+.vercel
+
+# Environnement Python : 195 Mo, specifique a ta machine
+inference/.venv/
+__pycache__/
+*.py[cod]
+
+# Secrets. Le .env porte la cle service_role, qui contourne la RLS.
+.env
+inference/.env
+*.local
+
+# Systeme
+.DS_Store
+Thumbs.db

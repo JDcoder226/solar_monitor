@@ -1,0 +1,93 @@
+{
+  "Ipv": {
+    "position": 0,
+    "train_min": -0.58465576171875,
+    "train_max": 8.72821044921875,
+    "model_base": 4.65643310546875,
+    "is_bipolar": true
+  },
+  "Vpv": {
+    "position": 1,
+    "train_min": -10.528564453125,
+    "train_max": 111.077880859375,
+    "model_base": 60.80322265625,
+    "is_bipolar": true
+  },
+  "Vdc": {
+    "position": 2,
+    "train_min": 0.5859375,
+    "train_max": 250.78125,
+    "model_base": 125.09765625,
+    "is_bipolar": false
+  },
+  "ia": {
+    "position": 3,
+    "train_min": -6.3454599609375,
+    "train_max": 13.7692861328125,
+    "model_base": 10.057373046875,
+    "is_bipolar": true
+  },
+  "ib": {
+    "position": 4,
+    "train_min": -7.264404296875,
+    "train_max": 6.619873046875,
+    "model_base": 6.942138671875,
+    "is_bipolar": true
+  },
+  "ic": {
+    "position": 5,
+    "train_min": -12.8494921875,
+    "train_max": 6.35216796875,
+    "model_base": 9.600830078125,
+    "is_bipolar": true
+  },
+  "va": {
+    "position": 6,
+    "train_min": -160.637512207031,
+    "train_max": 160.697784423828,
+    "model_base": 160.66764831542952,
+    "is_bipolar": true
+  },
+  "vb": {
+    "position": 7,
+    "train_min": -161.963500976562,
+    "train_max": 160.577239990234,
+    "model_base": 161.27037048339798,
+    "is_bipolar": true
+  },
+  "vc": {
+    "position": 8,
+    "train_min": -160.034790039062,
+    "train_max": 159.528503418009,
+    "model_base": 159.7816467285355,
+    "is_bipolar": true
+  },
+  "Iabc": {
+    "position": 9,
+    "train_min": 1.03016206111374e-07,
+    "train_max": 6.76204640165311,
+    "model_base": 3.3810231493184517,
+    "is_bipolar": false
+  },
+  "If": {
+    "position": 10,
+    "train_min": -0.0221909906231321,
+    "train_max": 51.8599476218074,
+    "model_base": 25.941069306215265,
+    "is_bipolar": true
+  },
+  "Vabc": {
+    "position": 11,
+    "train_min": 1.0,
+    "train_max": 156.291664479182,
+    "model_base": 77.645832239591,
+    "is_bipolar": false
+  },
+  "Vf": {
+    "position": 12,
+    "train_min": 49.4445723886848,
+    "train_max": 50.4642429692192,
+    "model_base": 0.5098352902672012,
+    "is_bipolar": false
+  }
+}

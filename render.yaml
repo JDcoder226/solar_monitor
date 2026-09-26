@@ -1,0 +1,44 @@
+# Blueprint Render pour le service d'inference HelioPulse.
+#
+# Ce fichier est optionnel : tu peux aussi creer le cron job a la main dans
+# l'interface Render en recopiant les valeurs ci-dessous. Il est utile si tu
+# veux que la configuration du service soit versionnee avec le code.
+#
+# Vercel ignore ce fichier. Voir DEPLOIEMENT.md pour la marche a suivre complete.
+
+services:
+  - type: cron
+    name: heliopulse-inference
+    runtime: docker
+
+    # Toutes les 15 minutes. Les cinq champs sont en UTC et le `*` DOIT etre
+    # entre guillemets, sinon YAML l'interprete comme un alias.
+    #
+    # 15 min est un compromis : le capteur ecrit bien plus souvent, mais chaque
+    # execution telecharge le modele (7 Mo) et paie un demarrage a froid. Le
+    # seuil `stale_after_minutes` (30 min par defaut) doit rester SUPERIEUR a
+    # cet intervalle, sinon chaque diagnostic est marque « mesure perimee ».
+    schedule: "*/15 * * * *"
+
+    # dockerContext est la racine du contexte de build : le Dockerfile fait
+    # `COPY . .`, donc le contexte doit etre inference/, pas la racine du depot.
+    dockerfilePath: ./inference/Dockerfile
+    dockerContext: ./inference
+
+    region: frankfurt
+    plan: starter
+    autoDeploy: true
+
+    # `sync: false` = la valeur est saisie dans l'interface Render et n'est
+    # jamais lue depuis ce fichier, qui est versionne. C'est ce qui permet de
+    # committer render.yaml sans y mettre la cle service_role.
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # Optionnel. Sans cette variable, le service diagnostique tous les
+      # devices marques active = true dans la table devices.
+      - key: DEVICE_IDS
+        sync: false

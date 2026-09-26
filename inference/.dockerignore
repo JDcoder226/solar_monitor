@@ -1,0 +1,16 @@
+# Sans ce fichier, `COPY . .` embarque l'environnement virtuel local (195 Mo)
+# et le .env (la cle service_role) dans l'image. Le secret serait alors lisible
+# par quiconque accede a l'image, alors qu'il ne doit vivre que dans les
+# variables d'environnement du service.
+
+.venv/
+__pycache__/
+*.py[cod]
+
+# Le secret ne doit JAMAIS entrer dans l'image.
+.env
+.env.*
+!.env.example
+
+# Le modele est necessaire : il est copie volontairement (models/ n'est pas
+# ignore ici, contrairement au .venv).

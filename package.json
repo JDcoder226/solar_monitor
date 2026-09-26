@@ -1,0 +1,25 @@
+{
+  "name": "heliopulse-dashboard",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dashboard de supervision solaire HelioPulse — build statique pour Vercel",
+  "scripts": {
+    "build": "npm run build:css && node scripts/build.mjs",
+    "build:css": "tailwindcss -i src/styles.css -o dist/assets/styles.css --minify",
+    "dev": "node scripts/build.mjs --watch",
+    "dev:css": "tailwindcss -i src/styles.css -o dist/assets/styles.css --watch",
+    "preview": "npx --yes serve dist",
+    "test": "cd inference && .venv/bin/python selftest.py"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "docx": "^9.7.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.1",
+    "tailwindcss": "^3.4.13"
+  }
+}

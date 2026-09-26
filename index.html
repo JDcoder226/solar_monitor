@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelioPulse · Monitoring solaire</title>
+    <meta
+      name="description"
+      content="Supervision solaire operationnelle : telemetrie, diagnostic et configuration."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- styles.css est genere par Tailwind (npm run build:css).
+         Lie en <link> plutot qu'importe depuis le JS : pas de FOUC, et le
+         navigateur telecharge le CSS en parallele du JS. -->
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- config.js porte l'URL et la cle anon Supabase. Il reste HORS du bundle
+         pour que tu puisses pointer vers un autre projet sans rebuild.
+         Il est charge AVANT app.js, qui lit window.HELIOPULSE_CONFIG. -->
+    <script src="/config.js"></script>
+    <script defer src="/assets/app.js"></script>
+  </body>
+</html>

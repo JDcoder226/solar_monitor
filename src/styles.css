@@ -1,0 +1,307 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Styles repris de l'ancien code.html, ou ils vivaient dans deux blocs <style>
+   separes (un dans <head>, un en fin de <body>). Regroupes ici pour que
+   l'ordre de cascade soit explicite. */
+
+:root {
+  --ink: #14212b;
+  --muted: #6b7c86;
+  --line: #dfe7e6;
+  --paper: #f6f8f6;
+  --card: #fff;
+  --sun: #f7a928;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+}
+
+.mono {
+  font-family: "Space Mono", monospace;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.grid-paper {
+  background-image:
+    linear-gradient(#e9efed 1px, transparent 1px),
+    linear-gradient(90deg, #e9efed 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.fade {
+  animation: fade 0.45s ease both;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Badges de statut ---------------------------------------------------- */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 99px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  background: currentColor;
+}
+
+.status.good {
+  color: #147b60;
+  background: #e5f5ee;
+}
+
+.status.warn {
+  color: #aa6816;
+  background: #fff3d9;
+}
+
+/* Ajout : l'etat critique manquait. Le schema autorise `defective`, mais
+   l'ancienne interface n'avait que good/warn et affichait donc un defaut
+   confirme avec la meme couleur qu'un avertissement. */
+.status.bad {
+  color: #a32020;
+  background: #fdeaea;
+}
+
+/* --- Icones de metriques ------------------------------------------------- */
+
+.metric-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.metric-icon.sun {
+  color: #c77c00;
+  background: #fff3d9;
+}
+
+.metric-icon.blue {
+  color: #3f79bd;
+  background: #eaf2fb;
+}
+
+.metric-icon.rose {
+  color: #d35d5d;
+  background: #fff0f0;
+}
+
+.metric-icon.slate {
+  color: #55636d;
+  background: #eef2f1;
+}
+
+/* --- Champs de formulaire de la page Parametres -------------------------- */
+/*
+ * Deux classes distinctes, parce que les confondre est la source d'erreur la
+ * plus banale d'un formulaire :
+ *   .field  = le CONTENEUR (libelle + controle + aide), en colonne
+ *   .input  = le CONTROLE lui-meme (input, select)
+ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: #8a969d;
+  line-height: 1.4;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.input:disabled {
+  background: #f4f6f5;
+  color: #8a969d;
+}
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.btn {
+  border: 1px solid #e09a1c;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--sun);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: #f6f8f6;
+}
+
+.btn-ghost:disabled {
+  background: #f4f6f5;
+  color: #8a969d;
+}
+
+/* --- Pastilles de comptage (mesurees / derivees / figees) ---------------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  padding: 3px 9px;
+  font-weight: 700;
+  background: #eef2f1;
+  color: #55636d;
+  white-space: nowrap;
+}
+
+.chip.good {
+  background: #e5f5ee;
+  color: #147b60;
+}
+
+.chip.info {
+  background: #eaf2fb;
+  color: #3f79bd;
+}
+
+.chip.warn {
+  background: #fff3d9;
+  color: #aa6816;
+}
+
+/* --- Selecteur de periode et d'onglet ------------------------------------ */
+
+.segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  /* Sans ceci, « Vue d'ensemble » se coupe sur deux lignes des que la barre
+     de navigation manque de place. */
+  white-space: nowrap;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--line);
+}
+
+.segmented button.active {
+  background: var(--sun);
+  color: #fff;
+}
+
+/* Bandeau d'avertissement : diagnostic degrade, hors-domaine, catalogue vide. */
+.notice {
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notice.warn {
+  border: 1px solid #f1d2ad;
+  background: #fff8ed;
+  color: #9b5c15;
+}
+
+.notice.bad {
+  border: 1px solid #f3c9c9;
+  background: #fdf2f2;
+  color: #a32020;
+}
+
+.notice.info {
+  border: 1px solid #cfe0ef;
+  background: #f3f8fd;
+  color: #2f5f8a;
+}
+
+/* Les onglets utilisent .segmented (voir plus haut). */

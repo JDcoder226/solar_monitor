@@ -1,0 +1,14 @@
+# Service d'inference HelioPulse.
+#
+# lightgbm est indispensable : le modele est un lgb.Booster. Il manquait dans la
+# version precedente, qui ne pouvait donc pas charger le modele.
+lightgbm>=4.0,<5
+
+joblib>=1.3,<2
+numpy>=1.26,<3
+supabase>=2.0,<3
+python-dotenv>=1.0,<2
+
+# scikit-learn a ete retire : les classes viennent de models/metadata.json
+# (un LabelEncoder trie, donc index i -> classes[i]), donc le service n'a plus
+# besoin de sklearn au runtime. joblib ne sert qu'a deserialiser le pickle.
