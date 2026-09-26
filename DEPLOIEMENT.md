@@ -127,27 +127,38 @@ vercel          # préversion
 vercel --prod   # production
 ```
 
-### Relier le dépôt — à faire une fois
+### Déployer depuis le local — méthode retenue
 
-**Sans cette étape, `git push` ne déploie rien.** Le projet Vercel a été créé
-en ligne de commande, donc il n'est relié à aucun dépôt : les pushes
-s'accumulent sur GitHub et le site reste figé sur le dernier `vercel --prod`.
-C'est arrivé exactement une fois ici — un push est resté 15 h sans effet, et le
-site servait encore la version de la veille.
+Le projet Vercel n'est **pas relié au dépôt GitHub** : `git push` ne déploie
+rien. Le déploiement se fait depuis cette machine :
+
+```bash
+npm run deploy        # build local, puis vercel --prod
+```
+
+Le build local n'est pas strictement nécessaire — Vercel reconstruit de son
+côté — mais il attrape une erreur de compilation avant l'envoi plutôt qu'après.
+
+**Deux conséquences à garder en tête :**
+
+1. `vercel --prod` téléverse l'**arbre de travail**, pas un commit. Déployer
+   avec des modifications non validées met en ligne du code qui n'existe dans
+   aucun commit. Commite avant de déployer.
+2. Le service d'inférence est cloné depuis GitHub par GitHub Actions. Si tu
+   déploies du code non commité, le dashboard et le service peuvent diverger
+   silencieusement. C'est le point à surveiller.
+
+### Alternative — relier le dépôt
+
+Pour que chaque `git push` déploie automatiquement :
 
 ```bash
 vercel git connect
 ```
 
 Ou par l'interface : projet Vercel → Settings → Git → *Connect Git Repository*.
-Après quoi chaque push sur `main` déclenche un déploiement automatique.
-
-Pour savoir si c'est bien relié, la liste des déploiements doit contenir une
-entrée dont l'origine est Git et non `jdcoder226` :
-
-```bash
-vercel ls
-```
+`vercel ls` doit alors montrer des déploiements dont l'origine n'est plus
+`jdcoder226`.
 
 ### Vérifier
 

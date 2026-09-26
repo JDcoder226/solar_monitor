@@ -10,6 +10,7 @@
     "dev": "node scripts/build.mjs --watch",
     "dev:css": "tailwindcss -i src/styles.css -o dist/assets/styles.css --watch",
     "preview": "npx --yes serve dist",
+    "deploy": "npm run build && vercel --prod --yes",
     "test": "cd inference && .venv/bin/python selftest.py"
   },
   "dependencies": {
