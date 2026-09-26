@@ -1,0 +1,69 @@
+# Diagnostic automatique HelioPulse, toutes les 15 minutes.
+#
+# Pourquoi GitHub Actions plutot que Render : Render facture les cron jobs
+# (minimum 1 $/mois). GitHub Actions est gratuit et sans limite de minutes sur
+# un depot PUBLIC. C'est ce qui permet de rester a 15 minutes d'intervalle —
+# sur un depot prive, le quota de 2000 min/mois ne tiendrait qu'une execution
+# par heure.
+#
+# Contrepartie assumee : le code du depot est visible. La cle `service_role`
+# n'y est pas — elle vit dans les secrets GitHub, crees ci-dessous. La cle
+# `anon` de config.js, elle, est deja publique par nature : elle est servie a
+# chaque visiteur du dashboard.
+
+name: Diagnostic HelioPulse
+
+on:
+  schedule:
+    # Toutes les 15 min, mais DECALE de 7 minutes plutot que `*/15`.
+    # `*/15` tombe sur :00, :15, :30 et :45 — et l'heure pile est le creneau
+    # le plus charge de GitHub, ou les executions en retard s'accumulent.
+    # Meme cadence, file d'attente plus courte.
+    - cron: "7,22,37,52 * * * *"
+
+  # Permet de lancer le diagnostic a la main depuis l'onglet Actions, sans
+  # attendre le prochain creneau. C'est le bouton a utiliser pour verifier
+  # une configuration que tu viens de changer dans Parametres.
+  workflow_dispatch:
+
+# Si une execution depasse 15 minutes, la suivante attend au lieu de mener
+# deux diagnostics en parallele sur les memes devices.
+concurrency:
+  group: diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnostiquer:
+    runs-on: ubuntu-latest
+
+    # Un service bloque ne doit pas consommer indefiniment. Le diagnostic
+    # normal prend moins d'une minute.
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          # setup-python cherche un requirements.txt a la racine par defaut.
+          # Le notre est dans inference/ : sans cette ligne, pas de cache.
+          cache-dependency-path: inference/requirements.txt
+
+      # LightGBM est une bibliotheque C++ qui reclame libgomp (OpenMP) a
+      # l'execution, et l'erreur n'apparait qu'au moment du `predict` — pas a
+      # l'installation, ce qui la rend penible a diagnostiquer. Les runners
+      # GitHub la fournissent deja, mais je ne peux pas le verifier d'ici, donc
+      # je l'installe explicitement. Cout : quelques secondes.
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq libgomp1
+
+      - run: pip install -r inference/requirements.txt
+
+      # --prune-days 90 : la retention est faite ici plutot que par une seconde
+      # tache planifiee. 3 devices x 96 runs/jour font ~290 lignes/jour.
+      - name: Diagnostiquer les installations
+        run: python inference/diagnose_panel.py --prune-days 90
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

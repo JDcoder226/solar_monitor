@@ -139,11 +139,108 @@ npm run build && npm run preview
 
 ---
 
-## Étape 3 — Service d'inférence (Render)
+## Étape 3 — Service d'inférence (GitHub Actions)
 
-`inference/Dockerfile` et `render.yaml` sont fournis. Le service est un
-**one-shot** : il diagnostique tous les devices actifs, purge les diagnostics
-de plus de 90 jours, puis sort. C'est ce qui le rend déployable en cron.
+Le service est un **one-shot** : il diagnostique tous les devices actifs, purge
+les diagnostics de plus de 90 jours, puis sort. C'est ce qui le rend planifiable.
+
+Le workflow `.github/workflows/inference.yml` est déjà écrit. Il reste trois
+gestes, tous dans l'interface GitHub.
+
+### 1. Rendre le dépôt public
+
+Settings → General → Danger Zone → **Change repository visibility** → Public.
+
+C'est ce qui rend les minutes illimitées. Sur un dépôt privé, le quota gratuit
+de 2000 min/mois ne tiendrait qu'une exécution par heure (chaque run coûte
+~2 minutes facturées : checkout, Python, `pip install lightgbm`, exécution).
+
+Avant de basculer, vérifie qu'aucun secret ne part avec. L'audit de
+l'historique complet a trouvé **un seul jeton, dont le rôle est `anon`** — la
+clé publique, déjà servie à chaque visiteur du dashboard. La clé `service_role`
+n'est nulle part dans le dépôt. Tu peux refaire le contrôle :
+
+```bash
+git grep -I -h -oE "eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+" $(git rev-list --all) | sort -u
+```
+
+Décode le deuxième segment de chaque jeton trouvé en base64 : le champ `role`
+doit valoir `anon`, jamais `service_role`.
+
+### 2. Ajouter les deux secrets
+
+Settings → Secrets and variables → Actions → **New repository secret** :
+
+| Nom | Valeur |
+|---|---|
+| `SUPABASE_URL` | `https://cwlzpxclfytmchrgjpdm.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | ta clé service_role (Supabase > Settings > API) |
+
+Les secrets sont chiffrés et ne sont **jamais** exposés par le passage en
+public, même si le workflow, lui, est lisible. C'est précisément le mécanisme
+qui permet un dépôt public avec un secret dedans.
+
+### 3. Pousser le workflow
+
+```bash
+git add .github/workflows/inference.yml DEPLOIEMENT.md
+git commit -m "Diagnostic automatique toutes les 15 min via GitHub Actions"
+git push
+```
+
+Puis onglet **Actions** → *Diagnostic HelioPulse* → **Run workflow** pour
+vérifier tout de suite, sans attendre le prochain créneau.
+
+### Vérifier
+
+Le journal doit ressembler à :
+
+```
+Modele charge : lgbm_pv_fault_model@cdbc699fc2c0 | 13 features | 16 classes
+ESP32-ARRAY-01 : warning    3M    100.0% | 2 mesurees / 8 derivees / 3 figees | ...
+Retention : 0 diagnostics purges (> 90 jours).
+```
+
+Le code de sortie doit être **0**. Un code non nul signifie qu'au moins un
+device a échoué — le détail est dans le journal.
+
+### En local, avant de pousser
+
+```bash
+cd inference
+cp .env.example .env      # puis renseigne les deux valeurs
+.venv/bin/python diagnose_panel.py --dry-run
+```
+
+`--dry-run` calcule tout et affiche le diagnostic **sans rien écrire** en base.
+C'est le mode à utiliser pour vérifier une configuration.
+
+---
+
+## Étape 4 — Vérifier que la boucle est bouclée
+
+1. Le cron écrit dans `panel_diagnostics`.
+2. Le dashboard lit la dernière ligne et affiche le diagnostic réel.
+
+```sql
+select created_at, device_id, status, fault_code, score, data_completeness
+from public.panel_diagnostics
+order by created_at desc
+limit 5;
+```
+
+Si la table reste vide alors que le cron sort en code 0, c'est que la dernière
+mesure est absente — le service le dit explicitement dans le journal
+(`aucune mesure, rien a diagnostiquer`), il n'écrit pas de ligne dans ce cas.
+
+---
+
+## Option payante — Render (~1 $/mois)
+
+Si tu préfères ne pas rendre le dépôt public, ou si les retards d'exécution de
+GitHub Actions deviennent gênants, Render exécute le même service. `inference/Dockerfile`
+et `render.yaml` sont fournis et testés. En contrepartie, les cron jobs Render
+sont facturés : **1 $/mois minimum** par tâche planifiée.
 
 ### Créer le cron job
 
@@ -191,65 +288,6 @@ cp .env.example .env      # puis renseigne les deux valeurs
 
 `--dry-run` calcule tout et affiche le diagnostic **sans rien écrire** en base.
 C'est le mode à utiliser pour vérifier une configuration.
-
----
-
-## Étape 4 — Vérifier que la boucle est bouclée
-
-1. Le cron écrit dans `panel_diagnostics`.
-2. Le dashboard lit la dernière ligne et affiche le diagnostic réel.
-
-```sql
-select created_at, device_id, status, fault_code, score, data_completeness
-from public.panel_diagnostics
-order by created_at desc
-limit 5;
-```
-
-Si la table reste vide alors que le cron sort en code 0, c'est que la dernière
-mesure est absente — le service le dit explicitement dans le journal
-(`aucune mesure, rien a diagnostiquer`), il n'écrit pas de ligne dans ce cas.
-
----
-
-## Variante : GitHub Actions au lieu de Render
-
-Si tu ne veux pas payer le dollar mensuel de Render, GitHub Actions exécute le
-même service gratuitement. C'est moins confortable (pas de journal Render, pas
-de déclenchement manuel en un clic) mais c'est gratuit.
-
-Crée `.github/workflows/inference.yml` :
-
-```yaml
-name: Diagnostic HelioPulse
-on:
-  schedule:
-    - cron: "*/30 * * * *"   # toutes les 30 min (le minimum gratuit utile)
-  workflow_dispatch:          # permet un declenchement manuel
-
-jobs:
-  diagnostiquer:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-      - run: pip install -r inference/requirements.txt
-      - run: python inference/diagnose_panel.py --prune-days 90
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-```
-
-Ajoute les deux secrets dans Settings > Secrets and variables > Actions. Le
-fichier `inference/Dockerfile` reste utile : il ne gêne pas et sert si tu
-changes d'hébergeur plus tard.
-
-Attention à la fréquence : GitHub facture les minutes des dépôts privés
-(2000/mois en gratuit). Toutes les 30 minutes représentent environ 700 minutes
-par mois pour cette tâche — ça tient, mais toutes les 5 minutes non.
 
 ---
 
