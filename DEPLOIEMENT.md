@@ -127,6 +127,28 @@ vercel          # préversion
 vercel --prod   # production
 ```
 
+### Relier le dépôt — à faire une fois
+
+**Sans cette étape, `git push` ne déploie rien.** Le projet Vercel a été créé
+en ligne de commande, donc il n'est relié à aucun dépôt : les pushes
+s'accumulent sur GitHub et le site reste figé sur le dernier `vercel --prod`.
+C'est arrivé exactement une fois ici — un push est resté 15 h sans effet, et le
+site servait encore la version de la veille.
+
+```bash
+vercel git connect
+```
+
+Ou par l'interface : projet Vercel → Settings → Git → *Connect Git Repository*.
+Après quoi chaque push sur `main` déclenche un déploiement automatique.
+
+Pour savoir si c'est bien relié, la liste des déploiements doit contenir une
+entrée dont l'origine est Git et non `jdcoder226` :
+
+```bash
+vercel ls
+```
+
 ### Vérifier
 
 Ouvre l'URL de déploiement et regarde la console du navigateur. Tu dois voir
