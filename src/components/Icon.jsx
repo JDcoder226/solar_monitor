@@ -6,6 +6,7 @@ const ICONS = {
   refresh: "↻",
   database: "▦",
   model: "◈",
+  logout: "⏻",
 };
 
 export default function Icon({ name }) {

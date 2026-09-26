@@ -5,12 +5,13 @@ dépend de la précédente.
 
 | Brique | Rôle | Hébergeur | Coût |
 |---|---|---|---|
-| Supabase | base de données | existant | gratuit |
+| Supabase | base de données + comptes | existant | gratuit |
 | `dist/` | dashboard (statique) | Vercel | gratuit |
-| `inference/` | diagnostic (one-shot) | Render Cron | ~1 $/mois |
+| `inference/` | diagnostic (one-shot) | GitHub Actions | gratuit (dépôt public) |
 
-Rien n'est encore dans un dépôt git aujourd'hui : c'est l'étape 0, et c'est
-obligatoire, car Vercel comme Render déploient depuis git.
+Le dépôt git existe et est poussé ; l'étape 0 ne sert plus qu'en cas de
+reprise de zéro. Render reste une alternative payante au service d'inférence,
+traitée en fin de document.
 
 ---
 
@@ -53,9 +54,10 @@ l'historique, et les retirer ensuite demande de réécrire l'historique.
 git commit -m "HelioPulse : dashboard, service d'inference, migration Supabase"
 ```
 
-Puis crée un dépôt **privé** vide sur GitHub — sans README ni `.gitignore`, sinon
-le premier `push` est refusé. `gh` n'est pas installé sur cette machine, donc
-passe par [github.com/new](https://github.com/new).
+Puis crée un dépôt **public** vide sur GitHub — sans README ni `.gitignore`,
+sinon le premier `push` est refusé. Public et pas privé : c'est ce qui rend les
+minutes GitHub Actions illimitées (voir étape 4). `gh` n'est pas installé sur
+cette machine, donc passe par [github.com/new](https://github.com/new).
 
 ```bash
 # 5. Relier et pousser. Remplace TON_COMPTE.
@@ -139,7 +141,62 @@ npm run build && npm run preview
 
 ---
 
-## Étape 3 — Service d'inférence (GitHub Actions)
+## Étape 3 — Compte administrateur (authentification)
+
+Le dashboard exige désormais une connexion. **Ce compte doit exister avant que
+le site ne soit accessible**, sinon le dashboard est inaccessible — y compris
+pour toi.
+
+### La contrainte à connaître : l'email doit être sur un domaine réel
+
+Supabase Auth identifie un compte par un **email**, et il refuse les domaines
+qui ne résolvent pas dans le DNS. Vérifié sur ce projet :
+
+| Adresse essayée | Réponse |
+|---|---|
+| `admin@heliopulse.local` | `email_address_invalid` |
+| `admin@heliopulse.app` | `email_address_invalid` |
+| `…@inphb.ci`, `…@gmail.com` | acceptés |
+
+`heliopulse.local` et `heliopulse.app` n'ont **aucun** enregistrement DNS (ni A,
+ni MX), alors que `inphb.ci` et `gmail.com` ont des MX. Un domaine inventé ne
+peut donc pas servir d'identifiant, même s'il « a l'air » valide.
+
+Conséquence sur le formulaire : il accepte un email complet tel quel, et
+transforme un identifiant court en `identifiant@<authEmailDomain>` (voir
+`config.js`). Pour te connecter avec le seul mot `admin`, il faut donc un
+domaine que tu contrôles, avec `admin@` comme adresse réelle.
+
+### Créer le compte
+
+1. Supabase → **Authentication** → **Users** → **Add user** → *Create new user*.
+2. Renseigne l'email et le mot de passe de ton choix.
+3. Coche **Auto Confirm User**.
+
+Le mot de passe ne doit figurer **nulle part** dans ce dépôt, qui est public :
+ni ici, ni dans `config.js`, ni dans un commit. Il ne vit que dans Supabase.
+
+L'étape 3 est importante : sans elle, le compte reste « non confirmé », Supabase
+envoie un lien de confirmation à une adresse qui n'existe peut-être pas, et la
+connexion répond « Email not confirmed ». Le message d'erreur du dashboard
+t'indique cette marche à suivre si ça arrive.
+
+### Fermer les inscriptions
+
+Authentication → **Sign In / Providers** → décoche **Allow new users to sign
+up**. Sans cela, n'importe qui peut se créer un compte — sans gain pour lui
+tant que les policies restent ouvertes, mais sans raison de le laisser ouvert
+non plus.
+
+### Aligner `config.js`
+
+`authEmailDomain` dans `config.js` doit correspondre au domaine du compte créé.
+Si tu utilises une adresse réelle, tu peux aussi la taper en entier dans le
+formulaire : un email complet n'est jamais transformé.
+
+---
+
+## Étape 4 — Service d'inférence (GitHub Actions)
 
 Le service est un **one-shot** : il diagnostique tous les devices actifs, purge
 les diagnostics de plus de 90 jours, puis sort. C'est ce qui le rend planifiable.
@@ -217,7 +274,7 @@ C'est le mode à utiliser pour vérifier une configuration.
 
 ---
 
-## Étape 4 — Vérifier que la boucle est bouclée
+## Étape 5 — Vérifier que la boucle est bouclée
 
 1. Le cron écrit dans `panel_diagnostics`.
 2. Le dashboard lit la dernière ligne et affiche le diagnostic réel.

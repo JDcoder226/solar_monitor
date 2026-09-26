@@ -6,8 +6,10 @@ import TelemetryChart, { METRIC_OPTIONS } from "./components/TelemetryChart.jsx"
 import DiagnosisPanel from "./components/DiagnosisPanel.jsx";
 import ReadingsTable from "./components/ReadingsTable.jsx";
 import SettingsPanel from "./components/SettingsPanel.jsx";
+import LoginScreen from "./components/LoginScreen.jsx";
 import { metricValue, periodStartIso, normalizeReading } from "./lib/format.js";
 import { describeDiagnosis, localDiagnosis } from "./lib/diagnosis.js";
+import { signIn, signOut, getSession, onAuthChange } from "./lib/auth.js";
 import {
   isConfigured,
   fetchDevices,
@@ -38,7 +40,73 @@ function bar(ratio) {
   return Number.isFinite(ratio) ? Math.max(0, Math.min(100, Math.round(ratio * 100))) : undefined;
 }
 
+/**
+ * Porte d'entree de l'application : elle ne rend le dashboard qu'une fois la
+ * session connue et valide.
+ *
+ * Le dashboard est un composant distinct, et pas une simple condition dans le
+ * meme composant, pour une raison precise : ses effets de chargement partent au
+ * montage. Les garder ici les ferait tirer les donnees avant toute connexion —
+ * inoffensif tant que les policies sont ouvertes, faux des qu'elles seront
+ * resserrees, et dans les deux cas gaspilleur. Les demonter fait aussi
+ * disparaitre de la memoire les donnees du compte precedent a la deconnexion.
+ */
 export default function App() {
+  // Trois etats distincts : `undefined` = on ne sait pas encore, `null` =
+  // deconnecte, objet = connecte. Ecraser `undefined` et `null` ferait
+  // clignoter l'ecran de connexion a chaque rechargement de page.
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Deux sources pour la meme information, et la premiere qui repond gagne.
+    // getSession() lit le jeton local immediatement ; onAuthStateChange émet
+    // INITIAL_SESSION juste apres. Se reposer sur le seul abonnement
+    // laisserait l'ecran de chargement bloque si l'evenement n'arrivait pas.
+    getSession().then((current) => {
+      if (!cancelled) setSession((prev) => (prev === undefined ? current : prev));
+    });
+
+    const unsubscribe = onAuthChange((_event, next) => {
+      if (!cancelled) setSession(next);
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const handleSignIn = useCallback((username, password) => signIn(username, password), []);
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut();
+    } catch {
+      // Si la revocation cote serveur echoue, on verrouille quand meme
+      // l'ecran : laisser l'utilisateur devant un dashboard qu'il a demande a
+      // quitter serait pire que de lui faire reessayer.
+      setSession(null);
+    }
+  }, []);
+
+  if (session === undefined) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <p className="text-xs text-slate-400">Vérification de la session…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen onSubmit={handleSignIn} />;
+  }
+
+  return <Dashboard session={session} onSignOut={handleSignOut} />;
+}
+
+function Dashboard({ session, onSignOut }) {
   const [tab, setTabState] = useState(tabFromHash);
 
   // L'onglet est reflete dans l'URL : le lien est partageable et le bouton
@@ -201,7 +269,7 @@ export default function App() {
 
   if (status.state === "error") {
     return (
-      <Shell tab={tab} setTab={setTab}>
+      <Shell tab={tab} setTab={setTab} session={session} onSignOut={onSignOut}>
         <div className="notice bad">
           <strong className="block mb-1">Chargement impossible</strong>
           {status.error}
@@ -212,7 +280,7 @@ export default function App() {
 
   if (status.state === "empty") {
     return (
-      <Shell tab={tab} setTab={setTab}>
+      <Shell tab={tab} setTab={setTab} session={session} onSignOut={onSignOut}>
         <div className="notice info">
           <strong className="block mb-1">Aucune installation enregistrée</strong>
           La table <span className="mono">devices</span> ne contient aucune ligne active. Ajoute ton
@@ -231,6 +299,8 @@ export default function App() {
       setDeviceId={setDeviceId}
       onRefresh={refresh}
       refreshing={refreshing}
+      session={session}
+      onSignOut={onSignOut}
     >
       {tab === "overview" ? (
         <>
@@ -415,7 +485,18 @@ function DataConnectionCard({ readings, diagnosisRow, deviceId }) {
   );
 }
 
-function Shell({ tab, setTab, device, devices, setDeviceId, onRefresh, refreshing, children }) {
+function Shell({
+  tab,
+  setTab,
+  device,
+  devices,
+  setDeviceId,
+  onRefresh,
+  refreshing,
+  session,
+  onSignOut,
+  children,
+}) {
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
@@ -474,6 +555,33 @@ function Shell({ tab, setTab, device, devices, setDeviceId, onRefresh, refreshin
               ))}
             </div>
           </nav>
+
+          {/*
+            Le compte est un frere du <nav>, pas un enfant : place dedans, il
+            suivait les retours a la ligne de la barre d'onglets et se
+            retrouvait seul sur une seconde ligne des que la place manquait.
+            L'email est masque sur petit ecran plutot que tronque — « admin@he… »
+            n'apprend rien.
+          */}
+          {onSignOut && (
+            <div className="flex items-center gap-2 md:pl-4 md:border-l md:border-slate-200">
+              <span
+                className="text-xs text-slate-500 whitespace-nowrap hidden lg:inline"
+                title={session?.user?.email || ""}
+              >
+                {session?.user?.email}
+              </span>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={onSignOut}
+                title={session?.user?.email ? `Se déconnecter (${session.user.email})` : "Se déconnecter"}
+                aria-label="Se déconnecter"
+              >
+                <Icon name="logout" />
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
