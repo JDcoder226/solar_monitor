@@ -1,4 +1,4 @@
-# Diagnostic automatique HelioPulse, toutes les 15 minutes.
+# Diagnostic automatique GEP MCI, toutes les 15 minutes.
 #
 # Pourquoi GitHub Actions plutot que Render : Render facture les cron jobs
 # (minimum 1 $/mois). GitHub Actions est gratuit et sans limite de minutes sur
@@ -11,7 +11,7 @@
 # `anon` de config.js, elle, est deja publique par nature : elle est servie a
 # chaque visiteur du dashboard.
 
-name: Diagnostic HelioPulse
+name: Diagnostic GEP MCI
 
 on:
   schedule:

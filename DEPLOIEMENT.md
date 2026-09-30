@@ -1,4 +1,4 @@
-# Déploiement HelioPulse
+# Déploiement GEP MCI
 
 Trois briques, trois hébergeurs. Elles se déploient dans cet ordre — chacune
 dépend de la précédente.
@@ -51,7 +51,7 @@ l'historique, et les retirer ensuite demande de réécrire l'historique.
 
 ```bash
 # 4. Figer le premier commit.
-git commit -m "HelioPulse : dashboard, service d'inference, migration Supabase"
+git commit -m "GEP MCI : dashboard, service d'inference, migration Supabase"
 ```
 
 Puis crée un dépôt **public** vide sur GitHub — sans README ni `.gitignore`,
@@ -61,7 +61,7 @@ cette machine, donc passe par [github.com/new](https://github.com/new).
 
 ```bash
 # 5. Relier et pousser. Remplace TON_COMPTE.
-git remote add origin git@github.com:TON_COMPTE/heliopulse.git
+git remote add origin git@github.com:TON_COMPTE/gep-mci.git
 git push -u origin main
 ```
 
@@ -75,7 +75,7 @@ pbcopy < ~/.ssh/id_ed25519.pub                          # copie la cle publique
 
 Puis colle-la dans GitHub > Settings > SSH and GPG keys > New SSH key. Pour
 utiliser HTTPS à la place de SSH, remplace l'URL du remote par
-`https://github.com/TON_COMPTE/heliopulse.git`.
+`https://github.com/TON_COMPTE/gep-mci.git`.
 
 Le dépôt contient `config.js`, donc la clé anon. Elle est publique par nature
 (elle est déjà servie à chaque visiteur du dashboard) — c'est la RLS qui
@@ -278,7 +278,7 @@ git commit -m "Diagnostic automatique toutes les 15 min via GitHub Actions"
 git push
 ```
 
-Puis onglet **Actions** → *Diagnostic HelioPulse* → **Run workflow** pour
+Puis onglet **Actions** → *Diagnostic GEP MCI* → **Run workflow** pour
 vérifier tout de suite, sans attendre le prochain créneau.
 
 ### Vérifier

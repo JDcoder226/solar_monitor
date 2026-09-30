@@ -1,4 +1,4 @@
-// Build statique du dashboard HelioPulse.
+// Build statique du dashboard GEP MCI.
 //
 // Pourquoi un script plutot qu'une ligne de commande esbuild en CLI :
 //   - `--define` en CLI oblige a du quoting shell fragile selon la plateforme ;

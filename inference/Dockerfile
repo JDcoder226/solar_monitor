@@ -1,4 +1,4 @@
-# Image du service d'inference HelioPulse.
+# Image du service d'inference GEP MCI.
 #
 # Le service est un ONE-SHOT : il diagnostique tous les devices actifs, purge
 # les vieux diagnostics, puis sort. C'est ce qui le rend deployable en cron job.

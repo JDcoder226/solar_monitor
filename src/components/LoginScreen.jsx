@@ -49,7 +49,7 @@ export default function LoginScreen({ onSubmit }) {
             H
           </div>
           <div>
-            <p className="font-bold leading-tight text-lg">HelioPulse</p>
+            <p className="font-bold leading-tight text-lg">GEP MCI</p>
             <p className="text-[11px] text-slate-500 leading-tight">Monitoring solaire</p>
           </div>
         </div>
@@ -112,8 +112,20 @@ export default function LoginScreen({ onSubmit }) {
 
         <p className="text-[11px] text-slate-400 text-center mt-4 leading-relaxed">
           Les identifiants sont vérifiés par Supabase Auth.
-          <br />
-          Le domaine <span className="mono">{AUTH_EMAIL_DOMAIN}</span> est ajouté à l'identifiant.
+          {/* Sans domaine configuré, l'identifiant court ne mène nulle part :
+              le dire ici plutôt que laisser l'utilisateur le deviner. */}
+          {AUTH_EMAIL_DOMAIN ? (
+            <>
+              <br />
+              Le domaine <span className="mono">{AUTH_EMAIL_DOMAIN}</span> est ajouté à l'identifiant.
+            </>
+          ) : (
+            <>
+              <br />
+              Saisis l'adresse complète : <span className="mono">authEmailDomain</span> est absent de
+              config.js.
+            </>
+          )}
         </p>
       </div>
     </div>

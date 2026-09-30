@@ -1,4 +1,4 @@
-# Service d'inference HelioPulse.
+# Service d'inference GEP MCI.
 #
 # lightgbm est indispensable : le modele est un lgb.Booster. Il manquait dans la
 # version precedente, qui ne pouvait donc pas charger le modele.

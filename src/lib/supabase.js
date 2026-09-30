@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 
 // Remplace le client cree depuis les bundles UMD charges par CDN dans l'ancien
 // code.html. Les valeurs viennent toujours de config.js, lu au chargement de la
-// page via window.HELIOPULSE_CONFIG.
-const config = window.HELIOPULSE_CONFIG || {};
+// page via window.GEPMCI_CONFIG.
+const config = window.GEPMCI_CONFIG || {};
 const url = config.supabaseUrl || "";
 const anonKey = config.supabaseAnonKey || "";
 

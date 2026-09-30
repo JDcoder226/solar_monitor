@@ -506,7 +506,7 @@ function Shell({
               H
             </div>
             <div>
-              <p className="font-bold leading-tight">HelioPulse</p>
+              <p className="font-bold leading-tight">GEP MCI</p>
               <p className="text-[11px] text-slate-500 leading-tight">Monitoring solaire</p>
             </div>
           </div>
@@ -588,7 +588,7 @@ function Shell({
       <main className="mx-auto max-w-[1280px] px-6 py-6 space-y-5">{children}</main>
 
       <footer className="mx-auto max-w-[1280px] px-6 pb-8 flex flex-wrap justify-between gap-3 text-xs text-slate-400">
-        <span className="mono">HELIOPULSE / EU-WEST</span>
+        <span className="mono">GEP MCI / EU-WEST</span>
         <span className="mono">sensor_readings → panel_diagnostics → dashboard</span>
       </footer>
     </div>

@@ -1,18 +1,25 @@
 import { supabase, isConfigured } from "./supabase.js";
 
-const config = window.HELIOPULSE_CONFIG || {};
+const config = window.GEPMCI_CONFIG || {};
 
 /**
  * Domaine utilisé pour transformer l'identifiant saisi en email.
  *
  * Supabase Auth n'a pas de champ « nom d'utilisateur » : un compte est
- * identifié par un email. Plutôt que d'imposer de taper
- * `admin@heliopulse.local` dans le formulaire, on demande `admin` et on
- * complète ici. Un email complet reste accepté tel quel.
+ * identifié par un email. Plutôt que d'imposer de taper l'adresse complète
+ * dans le formulaire, on demande `admin` et on complète ici. Un email complet
+ * reste accepté tel quel.
  */
-export const AUTH_EMAIL_DOMAIN = config.authEmailDomain || "heliopulse.local";
+export const AUTH_EMAIL_DOMAIN = config.authEmailDomain || "";
 
-/** « admin » → « admin@heliopulse.local ». Un email complet passe tel quel. */
+/**
+ * « admin » → « admin@gmail.com ». Un email complet passe tel quel.
+ *
+ * Si `authEmailDomain` manque dans config.js, le repli est la chaîne vide :
+ * l'aperçu du formulaire affiche alors « admin@ » et la connexion échoue sur
+ * un format invalide. C'est volontaire — un domaine inventé en repli serait
+ * rejeté par Supabase de toute façon, mais sans que rien ne le montre.
+ */
 export function usernameToEmail(username) {
   const value = String(username || "").trim().toLowerCase();
   if (!value) return "";

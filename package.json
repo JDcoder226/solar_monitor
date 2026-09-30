@@ -1,9 +1,9 @@
 {
-  "name": "heliopulse-dashboard",
+  "name": "gep-mci-dashboard",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Dashboard de supervision solaire HelioPulse — build statique pour Vercel",
+  "description": "Dashboard de supervision solaire GEP MCI — build statique pour Vercel",
   "scripts": {
     "build": "npm run build:css && node scripts/build.mjs",
     "build:css": "tailwindcss -i src/styles.css -o dist/assets/styles.css --minify",

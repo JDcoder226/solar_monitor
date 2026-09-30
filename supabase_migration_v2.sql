@@ -1,5 +1,5 @@
 -- =============================================================================
--- HelioPulse — migration v2
+-- GEP MCI — migration v2
 -- Integration du modele LightGBM 16 classes + page Parametres + couture de
 -- l'inference a 13 features.
 --
@@ -673,11 +673,79 @@ revoke all on function public.prune_diagnostics(integer) from public, anon, auth
 
 
 -- =============================================================================
--- 10. VERIFICATION — a executer apres la migration
+-- 10. model_test_requests — banc d'essai du modele (saisie manuelle)
+-- =============================================================================
+--
+-- Le dashboard ne sait pas executer le modele : c'est un Booster LightGBM
+-- Python, et le navigateur n'a que la cle anon. Cette table est la boite aux
+-- lettres entre les deux. Le dashboard DEPOSE une demande (13 valeurs saisies a
+-- la main, qui sont deja dans l'espace du modele : ni formule, ni echelle), le
+-- workflow GitHub Actions la RETIRE, execute le vrai modele, et ecrit le
+-- resultat. Le dashboard n'a plus qu'a relire sa ligne.
+--
+-- Rien ici ne touche panel_diagnostics : c'est un banc d'essai, pas un
+-- diagnostic d'installation. Une saisie manuelle ne doit jamais se retrouver
+-- presentee comme une mesure du site.
+
+create table if not exists public.model_test_requests (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  created_by  text,
+
+  -- Les 13 valeurs, indexees par nom de feature ("Ipv", "Vpv", ...). jsonb et
+  -- pas 13 colonnes : la liste des features est deja un referentiel editeable
+  -- (model_features), et une colonne par feature ferait diverger les deux.
+  features    jsonb not null,
+
+  -- pending -> running -> done | error. Les valeurs sont contraintes pour que
+  -- le frontend puisse faire un test exhaustif sans craindre un etat inconnu.
+  status      text not null default 'pending'
+              check (status in ('pending', 'running', 'done', 'error')),
+
+  result      jsonb,
+  error       text,
+  started_at  timestamptz,
+  finished_at timestamptz
+);
+
+-- Le runner cherche les demandes en attente les plus anciennes : sans cet
+-- index, il ferait un scan complet a chaque passage.
+create index if not exists model_test_requests_pending_idx
+  on public.model_test_requests (created_at)
+  where status = 'pending';
+
+alter table public.model_test_requests enable row level security;
+
+-- Meme posture de test que la section 7 : lecture et ecriture publiques, pour
+-- que le banc d'essai fonctionne sans authentification. Voir la section 9 pour
+-- fermer cet acces le jour venu.
+--
+-- A noter : `for all` couvre insert, select, update et delete. Le dashboard n'a
+-- besoin que d'insert et select, mais le runner, lui, passe par la cle
+-- service_role — qui contourne la RLS de toute facon.
+drop policy if exists "Public reads model test requests" on public.model_test_requests;
+create policy "Public reads model test requests"
+  on public.model_test_requests for select using (true);
+
+drop policy if exists "Public writes model test requests" on public.model_test_requests;
+create policy "Public writes model test requests"
+  on public.model_test_requests for all using (true) with check (true);
+
+
+-- =============================================================================
+-- 11. VERIFICATION — a executer apres la migration
 -- =============================================================================
 --
 -- select count(*) as features from public.model_features;   -- attendu : 13
 -- select count(*) as pannes   from public.fault_catalog;    -- attendu : 16
+--
+-- -- Le banc d'essai demarre vide : c'est normal.
+-- select count(*) from public.model_test_requests;
+--
+-- -- Les demandes restees en 'running' apres un run interrompu (le workflow
+-- -- GitHub a un delai maximum ; voir run_test_requests.py --recover-stale) :
+-- select id, created_at, started_at from public.model_test_requests
+--  where status = 'running' and started_at < now() - interval '15 minutes';
 --
 -- -- La somme des defauts et du sain doit faire 16, et 0L/0M seuls sont sains :
 -- select is_healthy, count(*) from public.fault_catalog group by 1;
